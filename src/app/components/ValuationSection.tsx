@@ -10,6 +10,7 @@ interface ValuationSectionProps {
     lastAccountsDate: string;
     accountsType: string;
     sourceLink?: string;
+    companyStatus: string;
 }
 
 export default function ValuationSection({
@@ -17,7 +18,8 @@ export default function ValuationSection({
     documentUrl,
     lastAccountsDate,
     accountsType,
-    sourceLink
+    sourceLink,
+    companyStatus
 }: ValuationSectionProps) {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<AIAnalysisResult | null>(null);
@@ -40,6 +42,8 @@ export default function ValuationSection({
             setLoading(false);
         }
     };
+
+    const isActive = companyStatus === 'active';
 
     // 1. RESULT STATE (AI Valuation)
     if (result) {
@@ -142,7 +146,12 @@ export default function ValuationSection({
                 </div>
 
                 <div className="w-full md:w-auto">
-                    {loading ? (
+                    {!isActive ? (
+                        <div className="px-6 py-3 bg-gray-100 text-gray-500 rounded-lg font-medium border border-gray-200 text-center">
+                            Valuation Unavailable <br />
+                            <span className="text-xs uppercase font-bold tracking-wider">(Company {companyStatus})</span>
+                        </div>
+                    ) : loading ? (
                         <div className="flex items-center gap-3 px-6 py-3 bg-indigo-50 text-indigo-700 rounded-lg font-medium border border-indigo-100 animate-pulse">
                             <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

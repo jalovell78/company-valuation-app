@@ -5,8 +5,17 @@ import Link from 'next/link';
 import ValuationSection from '@/app/components/ValuationSection';
 import { FilingHistoryItem } from '@/lib/api';
 
-export default async function CompanyPage({ params }: { params: Promise<{ id: string }> }) {
+interface PageProps {
+    params: Promise<{ id: string }>;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function CompanyPage({ params, searchParams }: PageProps) {
     const { id } = await params;
+    const resolvedSearchParams = await searchParams;
+    const query = resolvedSearchParams?.q as string | undefined;
+
+    const backLink = query ? `/?q=${encodeURIComponent(query)}` : '/';
 
     // Parallel Data Fetching
     const [profile, officers, filingHistory] = await Promise.all([
@@ -29,8 +38,8 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
             <div className="max-w-5xl mx-auto space-y-6">
 
                 {/* Navigation */}
-                <Link href="/" className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-2">
-                    &larr; Back to Search
+                <Link href={backLink} className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-2">
+                    &larr; Back to Search{query ? ` for "${query}"` : ''}
                 </Link>
 
                 {/* Header Card */}
@@ -61,6 +70,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
                     lastAccountsDate={metadata.lastAccountsDate}
                     accountsType={metadata.accountsType}
                     sourceLink={metadata.sourceLink}
+                    companyStatus={profile.company_status}
                 />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
