@@ -44,6 +44,7 @@ export default function ValuationSection({
     };
 
     const isActive = companyStatus === 'active';
+    const isDormant = accountsType.toLowerCase().includes('dormant');
 
     // 1. RESULT STATE (AI Valuation)
     if (result) {
@@ -133,15 +134,24 @@ export default function ValuationSection({
                         Generate an accurate valuation & executive summary based on the latest filed accounts.
                     </p>
 
-                    <div className="mt-4 flex gap-6 text-sm text-gray-600">
-                        <div>
-                            <span className="block text-xs uppercase text-gray-400 font-bold">Latest Accounts</span>
-                            <span className="font-mono">{lastAccountsDate}</span>
+                    <div className="mt-4 space-y-3">
+                        <div className="flex gap-6 text-sm text-gray-600">
+                            <div>
+                                <span className="block text-xs uppercase text-gray-400 font-bold">Latest Accounts</span>
+                                <span className="font-mono">{lastAccountsDate}</span>
+                            </div>
+                            <div>
+                                <span className="block text-xs uppercase text-gray-400 font-bold">Basis</span>
+                                <span className="capitalize">{accountsType.replace(/-/g, ' ')}</span>
+                            </div>
                         </div>
-                        <div>
-                            <span className="block text-xs uppercase text-gray-400 font-bold">Basis</span>
-                            <span className="capitalize">{accountsType.replace(/-/g, ' ')}</span>
-                        </div>
+
+                        {isDormant && (
+                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-yellow-50 text-yellow-700 rounded-md border border-yellow-200 text-sm font-medium">
+                                <span className="text-lg">⚠️</span>
+                                <span>Dormant Company: Valuation based on Assets only.</span>
+                            </div>
+                        )}
                     </div>
                 </div>
 
