@@ -14,7 +14,7 @@ export async function searchCompaniesAction(query: string) {
     }
 }
 
-export async function generateAIValuation(companyNumber: string, documentMetadataUrl?: string): Promise<{ success: boolean; data?: AIAnalysisResult; error?: string }> {
+export async function generateAIValuation(companyNumber: string, documentMetadataUrl?: string, companyStatus?: string): Promise<{ success: boolean; data?: AIAnalysisResult; error?: string }> {
     try {
         let docUrl = documentMetadataUrl;
 
@@ -35,12 +35,21 @@ export async function generateAIValuation(companyNumber: string, documentMetadat
         const pdfBuffer = await fetchPdfBuffer(docUrl);
 
         // 2. Analyze with Gemini
-        const analysis = await analyzeValuationWithGemini(pdfBuffer);
+        const analysis = await analyzeValuationWithGemini(pdfBuffer, companyStatus);
 
         return { success: true, data: analysis };
 
     } catch (error: any) {
         console.error("AI Valuation Error:", error);
+
+        // Detailed Rate Limit handling
+        if (error.message?.includes('429') || error.message?.includes('Quota exceeded')) {
+            return {
+                success: false,
+                error: "RATE_LIMIT_EXCEEDED" // Special code for UI
+            };
+        }
+
         return { success: false, error: error.message || "Failed to generate AI valuation" };
     }
 }

@@ -71,6 +71,10 @@ export default async function CompanyPage({ params, searchParams }: PageProps) {
                     accountsType={metadata.accountsType}
                     sourceLink={metadata.sourceLink}
                     companyStatus={profile.company_status}
+                    incorporationDate={profile.date_of_creation}
+                    companyType={profile.type}
+                    sicCodes={profile.sic_codes}
+                    dissolvedDate={profile.date_of_cessation}
                 />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -97,17 +101,38 @@ export default async function CompanyPage({ params, searchParams }: PageProps) {
                         <h2 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">Recent Filing History</h2>
                         <div className="space-y-3 max-h-[500px] overflow-y-auto">
                             {filingHistory.items && filingHistory.items.length > 0 ? (
-                                filingHistory.items.slice(0, 20).map((filing, idx) => (
-                                    <div key={idx} className="flex gap-3 text-sm">
-                                        <div className="text-gray-400 font-mono w-24 shrink-0">{filing.date}</div>
-                                        <div>
-                                            <p className="font-medium text-gray-800">{filing.description}</p>
-                                            <span className="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded mt-1">
-                                                {filing.type}
-                                            </span>
+                                filingHistory.items.slice(0, 20).map((filing, idx) => {
+                                    // Construct the viewer link using the transaction ID from links.self
+                                    // filing.links?.self format: /company/{number}/filing-history/{transactionId}
+                                    const transactionId = filing.links?.self?.split('/').pop();
+                                    const viewerLink = transactionId && filing.links?.document_metadata
+                                        ? `https://find-and-update.company-information.service.gov.uk/company/${profile.company_number}/filing-history/${transactionId}/document?format=pdf&download=0`
+                                        : null;
+
+                                    return (
+                                        <div key={idx} className="flex gap-3 text-sm group">
+                                            <div className="text-gray-400 font-mono w-24 shrink-0">{filing.date}</div>
+                                            <div>
+                                                {viewerLink ? (
+                                                    <a
+                                                        href={viewerLink}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="font-medium text-gray-800 group-hover:text-blue-600 group-hover:underline transition-colors block"
+                                                    >
+                                                        {filing.description}
+                                                    </a>
+                                                ) : (
+                                                    <p className="font-medium text-gray-800">{filing.description}</p>
+                                                )}
+
+                                                <span className="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded mt-1">
+                                                    {filing.type}
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))
+                                    );
+                                })
                             ) : (
                                 <p className="text-gray-500">No filing history available.</p>
                             )}

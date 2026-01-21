@@ -40,6 +40,7 @@ export interface CompanyProfile {
   company_name: string;
   company_number: string;
   date_of_creation: string;
+  date_of_cessation?: string;
   registered_office_address: {
     address_line_1: string;
     postal_code: string;
@@ -52,7 +53,8 @@ export interface CompanyProfile {
       made_up_to: string;
       type: string;
     }
-  }
+  };
+  sic_codes: string[];
 }
 
 export interface Officer {
