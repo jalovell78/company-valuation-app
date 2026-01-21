@@ -80,16 +80,45 @@ export default async function CompanyPage({ params, searchParams }: PageProps) {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Directors */}
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                        <h2 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">Officers & Directors ({officers.active_count})</h2>
+                        <h2 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">Officers & Directors ({officers.active_count} Active)</h2>
                         <div className="space-y-4 max-h-[500px] overflow-y-auto">
                             {officers.items && officers.items.length > 0 ? (
-                                officers.items.map((officer, idx) => (
-                                    <div key={idx} className="pb-4 border-b border-gray-100 last:border-0">
-                                        <p className="font-semibold text-gray-800">{officer.name}</p>
-                                        <p className="text-sm text-blue-600">{officer.officer_role}</p>
-                                        <p className="text-xs text-gray-500 mt-1">Appointed: {officer.appointed_on}</p>
-                                    </div>
-                                ))
+                                officers.items
+                                    .sort((a, b) => {
+                                        // Sort by Active first (no resigned_on date), then by appointed date (newest first)
+                                        if (!a.resigned_on && b.resigned_on) return -1;
+                                        if (a.resigned_on && !b.resigned_on) return 1;
+                                        return new Date(b.appointed_on).getTime() - new Date(a.appointed_on).getTime();
+                                    })
+                                    .map((officer, idx) => {
+                                        const isResigned = !!officer.resigned_on;
+                                        return (
+                                            <div key={idx} className={`pb-4 border-b border-gray-100 last:border-0 ${isResigned ? 'opacity-60' : ''}`}>
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <p className={`font-semibold ${isResigned ? 'text-gray-500' : 'text-gray-900'}`}>{officer.name}</p>
+                                                        <p className="text-sm text-blue-600">{officer.officer_role}</p>
+                                                    </div>
+                                                    {isResigned ? (
+                                                        <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded border border-gray-200 uppercase">Resigned</span>
+                                                    ) : (
+                                                        <span className="px-2 py-0.5 text-xs font-medium bg-green-50 text-green-700 rounded border border-green-200 uppercase">Active</span>
+                                                    )}
+                                                </div>
+
+                                                <div className="flex gap-4 mt-2 text-xs text-gray-500">
+                                                    <span className="flex items-center gap-1">
+                                                        🗓 Appointed: <span className="font-mono text-gray-700">{officer.appointed_on}</span>
+                                                    </span>
+                                                    {isResigned && (
+                                                        <span className="flex items-center gap-1 text-red-400">
+                                                            👋 Resigned: <span className="font-mono text-red-500">{officer.resigned_on}</span>
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })
                             ) : (
                                 <p className="text-gray-500">No officer data available.</p>
                             )}
