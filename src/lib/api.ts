@@ -76,6 +76,7 @@ export interface FilingHistoryItem {
   type: string;
   links: {
     document_metadata: string;
+    self?: string;
   };
 }
 
