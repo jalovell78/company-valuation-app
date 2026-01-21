@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
+import BackButton from '@/app/components/BackButton';
 import { fetchOfficerAppointments } from '@/app/actions';
 import { OfficerAppointmentsResponse } from '@/lib/api';
 
@@ -82,12 +83,7 @@ export default function OfficerPage() {
 
                 {/* Back Navigation */}
                 <div className="mb-6">
-                    <Link
-                        href={`/?q=${encodeURIComponent(q)}&type=officer&city=${encodeURIComponent(city)}`}
-                        className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-2 inline-flex"
-                    >
-                        &larr; Back to Search {q ? `for "${q}"` : ''}
-                    </Link>
+                    <BackButton label="Back" />
                 </div>
 
                 {/* Profile Header */}
@@ -131,8 +127,8 @@ export default function OfficerPage() {
                                                     {appt.appointed_to.company_name}
                                                 </Link>
                                                 <span className={`px-2 py-0.5 text-xs font-bold uppercase rounded border ${appt.appointed_to.company_status === 'active'
-                                                        ? 'bg-green-100 text-green-700 border-green-200'
-                                                        : 'bg-gray-100 text-gray-600 border-gray-200'
+                                                    ? 'bg-green-100 text-green-700 border-green-200'
+                                                    : 'bg-gray-100 text-gray-600 border-gray-200'
                                                     }`}>
                                                     {appt.appointed_to.company_status}
                                                 </span>

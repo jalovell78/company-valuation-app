@@ -3,6 +3,7 @@ import { getCompanyProfile, getCompanyOfficers, getFilingHistory } from '@/lib/a
 import { extractAccountsMetadata } from '@/lib/valuation';
 import Link from 'next/link';
 import ValuationSection from '@/app/components/ValuationSection';
+import BackButton from '@/app/components/BackButton';
 import { FilingHistoryItem } from '@/lib/api';
 
 interface PageProps {
@@ -38,9 +39,7 @@ export default async function CompanyPage({ params, searchParams }: PageProps) {
             <div className="max-w-5xl mx-auto space-y-6">
 
                 {/* Navigation */}
-                <Link href={backLink} className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-2">
-                    &larr; Back to Search{query ? ` for "${query}"` : ''}
-                </Link>
+                <BackButton label="Back" />
 
                 {/* Header Card */}
                 <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
