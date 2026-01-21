@@ -92,11 +92,21 @@ export default async function CompanyPage({ params, searchParams }: PageProps) {
                                     })
                                     .map((officer, idx) => {
                                         const isResigned = !!officer.resigned_on;
+                                        // Extract ID from /officers/{id}/appointments
+                                        const match = officer.links?.officer?.appointments?.match(/\/officers\/([^/?]+)/);
+                                        const officerId = match ? match[1] : null;
+
                                         return (
                                             <div key={idx} className={`pb-4 border-b border-gray-100 last:border-0 ${isResigned ? 'opacity-60' : ''}`}>
                                                 <div className="flex justify-between items-start">
                                                     <div>
-                                                        <p className={`font-semibold ${isResigned ? 'text-gray-500' : 'text-gray-900'}`}>{officer.name}</p>
+                                                        {officerId ? (
+                                                            <Link href={`/officer/${officerId}`} className={`font-semibold hover:underline hover:text-blue-600 ${isResigned ? 'text-gray-500' : 'text-gray-900'}`}>
+                                                                {officer.name}
+                                                            </Link>
+                                                        ) : (
+                                                            <p className={`font-semibold ${isResigned ? 'text-gray-500' : 'text-gray-900'}`}>{officer.name}</p>
+                                                        )}
                                                         <p className="text-sm text-blue-600">{officer.officer_role}</p>
                                                     </div>
                                                     {isResigned ? (

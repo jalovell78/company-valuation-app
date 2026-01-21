@@ -62,6 +62,11 @@ export interface Officer {
   officer_role: string;
   appointed_on: string;
   resigned_on?: string;
+  links?: {
+    officer?: {
+      appointments: string;
+    };
+  };
 }
 
 export interface OfficerListResponse {
@@ -83,6 +88,54 @@ export interface FilingHistoryItem {
 export interface FilingHistoryResponse {
   items: FilingHistoryItem[];
   filing_history_status: string;
+}
+
+// Officer Search Interfaces
+export interface OfficerSearchResult {
+  title: string;
+  kind: string;
+  links: {
+    self: string;
+  };
+  appointment_count: number;
+  date_of_birth?: {
+    month: number;
+    year: number;
+  };
+  address: {
+    premises?: string;
+    address_line_1: string;
+    locality: string;
+    postal_code: string;
+  };
+}
+
+export interface OfficerSearchResponse {
+  items: OfficerSearchResult[];
+  total_results: number;
+}
+
+// Officer Appointments
+export interface AppointmentItem {
+  name: string; // Company Name
+  appointed_to: {
+    company_name: string;
+    company_number: string;
+    company_status: string;
+  };
+  officer_role: string;
+  appointed_on: string;
+  resigned_on?: string;
+}
+
+export interface OfficerAppointmentsResponse {
+  items: AppointmentItem[];
+  name: string;
+  total_results: number;
+  date_of_birth?: {
+    month: number;
+    year: number;
+  };
 }
 
 export async function searchCompanies(query: string): Promise<CompanySearchResponse> {
@@ -133,6 +186,38 @@ export async function getFilingHistory(companyNumber: string): Promise<FilingHis
 
   if (!res.ok) {
     throw new Error(`Error fetching filing history: ${res.statusText}`);
+  }
+
+  return res.json();
+}
+
+export async function searchOfficers(query: string): Promise<OfficerSearchResponse> {
+  if (!query) return { items: [], total_results: 0 };
+
+  const res = await fetch(`${BASE_URL}/search/officers?q=${encodeURIComponent(query)}&items_per_page=20`, {
+    headers: getHeaders(),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Error searching officers: ${res.status} ${res.statusText}`);
+  }
+
+  return res.json();
+}
+
+export async function getOfficerAppointments(officerId: string): Promise<OfficerAppointmentsResponse> {
+  if (!officerId) throw new Error("Officer ID is required");
+
+  // Log the URL for debugging
+  const url = `${BASE_URL}/officers/${officerId}/appointments?items_per_page=50`;
+  console.log(`Fetching Officer Appointments: ${url}`);
+
+  const res = await fetch(url, {
+    headers: getHeaders(),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Error fetching officer appointments: ${res.status} ${res.statusText}`);
   }
 
   return res.json();

@@ -1,6 +1,12 @@
 'use server';
 
-import { searchCompanies, getFilingHistory, getCompanyProfile } from '@/lib/api';
+import {
+    searchCompanies,
+    getFilingHistory,
+    getCompanyProfile,
+    searchOfficers,
+    getOfficerAppointments
+} from '@/lib/api';
 import { fetchPdfBuffer } from '@/lib/server/pdf-service';
 import { analyzeValuationWithGemini, AIAnalysisResult } from '@/lib/server/ai-valuation';
 
@@ -51,5 +57,26 @@ export async function generateAIValuation(companyNumber: string, documentMetadat
         }
 
         return { success: false, error: error.message || "Failed to generate AI valuation" };
+    }
+}
+
+// Officer Actions
+export async function fetchOfficers(query: string) {
+    try {
+        const data = await searchOfficers(query);
+        return { success: true, data };
+    } catch (error: any) {
+        console.error("Fetch Officers Error:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function fetchOfficerAppointments(officerId: string) {
+    try {
+        const data = await getOfficerAppointments(officerId);
+        return { success: true, data };
+    } catch (error: any) {
+        console.error("Fetch Appointments Error:", error);
+        return { success: false, error: error.message };
     }
 }
