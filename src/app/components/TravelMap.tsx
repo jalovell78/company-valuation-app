@@ -215,9 +215,10 @@ export default function TravelMap({ destinationAddress, companyName }: TravelMap
                 </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[500px]">
-                {/* Left Col: Map (2/3 width) */}
-                <div className="md:col-span-2 h-full rounded-xl overflow-hidden shadow-sm border border-gray-200 relative z-0">
+            {/* Main Content Area */}
+            <div className="flex flex-col md:grid md:grid-cols-3 gap-6 md:h-[500px]">
+                {/* Map Section (Mobile: 300px fixed, Desktop: Full height of container) */}
+                <div className="h-[350px] md:h-full md:col-span-2 rounded-xl overflow-hidden shadow-sm border border-gray-200 relative z-0">
                     <MapContainer
                         center={userLoc || [51.505, -0.09]}
                         zoom={13}
@@ -252,8 +253,8 @@ export default function TravelMap({ destinationAddress, companyName }: TravelMap
                     </MapContainer>
                 </div>
 
-                {/* Right Col: Directions (1/3 width) */}
-                <div className="md:col-span-1 bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col">
+                {/* Directions Section (Mobile: Auto/Max height, Desktop: Full height) */}
+                <div className="md:col-span-1 bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col h-[400px] md:h-full">
                     <h4 className="font-semibold text-gray-900 px-4 py-3 bg-gray-50 border-b border-gray-200">Directions</h4>
                     <div className="overflow-y-auto p-4 text-sm scrollbar-thin scrollbar-thumb-gray-200 flex-1">
                         <ol className="space-y-4 relative border-l border-gray-200 ml-2">

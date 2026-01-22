@@ -44,6 +44,11 @@ export async function searchCompaniesAction(query: string) {
 
 export async function generateAIValuation(companyNumber: string, documentMetadataUrl?: string, companyStatus?: string): Promise<{ success: boolean; data?: AIAnalysisResult; error?: string }> {
     try {
+        const session = await auth();
+        if (!session?.user) {
+            return { success: false, error: "Authentication required to generate valuation." };
+        }
+
         let docUrl = documentMetadataUrl;
 
         // If no URL provided (e.g. from UI), try to find latest AA

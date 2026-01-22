@@ -15,6 +15,7 @@ interface ValuationSectionProps {
     dissolvedDate?: string;
     companyType?: string;
     sicCodes?: string[];
+    isLoggedIn?: boolean;
 }
 
 // Helper to render stars
@@ -55,13 +56,16 @@ export default function ValuationSection({
     incorporationDate,
     dissolvedDate,
     companyType,
-    sicCodes
+    sicCodes,
+    isLoggedIn = false
 }: ValuationSectionProps) {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<AIAnalysisResult | null>(null);
     const [error, setError] = useState('');
 
     const handleAnalyze = async () => {
+        if (!isLoggedIn) return; // Client-side guard
+
         setLoading(true);
         setError('');
 
@@ -87,6 +91,7 @@ export default function ValuationSection({
 
     // 1. RESULT STATE (AI Valuation)
     if (result) {
+        // ... (Keep existing result rendering logic) ...
         return (
             <div className="bg-gradient-to-br from-indigo-600 to-blue-700 text-white p-8 rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-4">
                 <div className="flex justify-between items-start mb-6 border-b border-white/20 pb-4">
@@ -353,6 +358,16 @@ export default function ValuationSection({
                             Valuation Unavailable <br />
                             <span className="text-xs uppercase font-bold tracking-wider">(Company {companyStatus})</span>
                         </div>
+                    ) : !isLoggedIn ? (
+                        <div className="flex flex-col items-center gap-2">
+                            <a
+                                href="/login"
+                                className="w-full md:w-auto bg-gray-900 hover:bg-gray-800 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-all flex items-center justify-center gap-2"
+                            >
+                                🔒 Sign in to Unlock Valuation
+                            </a>
+                            <p className="text-xs text-gray-500">Free account required for analysis</p>
+                        </div>
                     ) : loading ? (
                         <div className="flex items-center gap-3 px-6 py-3 bg-indigo-50 text-indigo-700 rounded-lg font-medium border border-indigo-100 animate-pulse">
                             <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -373,8 +388,8 @@ export default function ValuationSection({
                     {/* Graceful Error Handling UI */}
                     {error && (
                         <div className={`mt-3 p-3 rounded-lg text-sm border ${isRateLimit
-                                ? 'bg-orange-50 text-orange-800 border-orange-200'
-                                : 'bg-red-50 text-red-700 border-red-200'
+                            ? 'bg-orange-50 text-orange-800 border-orange-200'
+                            : 'bg-red-50 text-red-700 border-red-200'
                             }`}>
                             {isRateLimit ? (
                                 <>

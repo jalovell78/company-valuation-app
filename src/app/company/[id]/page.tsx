@@ -57,6 +57,15 @@ export default async function CompanyPage({ params, searchParams }: PageProps) {
 
     const documentUrl = latestAccountFiling?.links?.document_metadata;
 
+    // Construct direct PDF viewer link for the source filing
+    const transactionId = latestAccountFiling?.links?.self?.split('/').pop();
+    const sourcePdfLink = transactionId && documentUrl
+        ? `https://find-and-update.company-information.service.gov.uk/company/${profile.company_number}/filing-history/${transactionId}/document?format=pdf&download=0`
+        : metadata.sourceLink; // Fallback to generic history page if not found
+
+    const session = await import("@/auth").then(mod => mod.auth());
+    const isLoggedIn = !!session?.user;
+
     return (
         <div className="min-h-screen bg-gray-50 py-10 px-4">
             <div className="max-w-5xl mx-auto space-y-6">
@@ -100,12 +109,13 @@ export default async function CompanyPage({ params, searchParams }: PageProps) {
                     documentUrl={documentUrl}
                     lastAccountsDate={metadata.lastAccountsDate}
                     accountsType={metadata.accountsType}
-                    sourceLink={metadata.sourceLink}
+                    sourceLink={sourcePdfLink}
                     companyStatus={profile.company_status}
                     incorporationDate={profile.date_of_creation}
                     companyType={profile.type}
                     sicCodes={profile.sic_codes}
                     dissolvedDate={profile.date_of_cessation}
+                    isLoggedIn={isLoggedIn}
                 />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
