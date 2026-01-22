@@ -3,8 +3,23 @@ import { getCompanyProfile, getCompanyOfficers, getFilingHistory } from '@/lib/a
 import { extractAccountsMetadata } from '@/lib/valuation';
 import Link from 'next/link';
 import ValuationSection from '@/app/components/ValuationSection';
+import DynamicMap from '@/app/components/DynamicMap';
 import BackButton from '@/app/components/BackButton';
 import { FilingHistoryItem } from '@/lib/api';
+
+// Helper to format address
+function formatAddress(address: any) {
+    if (!address) return "";
+    const parts = [
+        address.premises,
+        address.address_line_1,
+        address.address_line_2,
+        address.locality,
+        address.region,
+        address.postal_code,
+    ].filter(Boolean);
+    return parts.join(", ");
+}
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -24,6 +39,14 @@ export default async function CompanyPage({ params, searchParams }: PageProps) {
         getCompanyOfficers(id),
         getFilingHistory(id)
     ]);
+
+    // Log the view (Fire and forget)
+    // We import dynamically or use the helper which handles auth check
+    const { logAction } = await import("@/lib/audit");
+    logAction("VIEW_COMPANY", {
+        companyNumber: profile.company_number,
+        companyName: profile.company_name
+    });
 
     const metadata = extractAccountsMetadata(profile, filingHistory.items || []);
 
@@ -48,10 +71,10 @@ export default async function CompanyPage({ params, searchParams }: PageProps) {
                             <h1 className="text-3xl font-bold text-gray-900">{profile.company_name}</h1>
                             <p className="text-gray-500 font-mono mt-1">{profile.company_number}</p>
                             <p className="text-gray-700 mt-4 max-w-lg">
-                                {profile.registered_office_address.address_line_1}, {profile.registered_office_address.locality} {profile.registered_office_address.postal_code}
+                                {formatAddress(profile.registered_office_address)}
                             </p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right shrink-0">
                             <span className={`inline-block px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wide ${profile.company_status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                                 }`}>
                                 {profile.company_status}
@@ -59,6 +82,15 @@ export default async function CompanyPage({ params, searchParams }: PageProps) {
                             <p className="text-sm text-gray-500 mt-2">Incorporated: {profile.date_of_creation}</p>
                             <p className="text-sm text-gray-500">Type: {profile.type}</p>
                         </div>
+                    </div>
+
+                    {/* Travel Map Section - Moved to full width row below the header info */}
+                    <div className="mt-8 border-t border-gray-100 pt-8">
+                        <h3 className="text-base font-semibold leading-6 text-gray-900 mb-4">Travel & Location</h3>
+                        <DynamicMap
+                            destinationAddress={formatAddress(profile.registered_office_address)}
+                            companyName={profile.company_name}
+                        />
                     </div>
                 </div>
 

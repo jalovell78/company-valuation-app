@@ -9,6 +9,28 @@ import {
 } from '@/lib/api';
 import { fetchPdfBuffer } from '@/lib/server/pdf-service';
 import { analyzeValuationWithGemini, AIAnalysisResult } from '@/lib/server/ai-valuation';
+import { db } from '@/db';
+import { auditLogs } from '@/db/schema';
+import { auth } from '@/auth';
+
+export async function logAction(action: string, details: any) {
+    try {
+        const session = await auth();
+        // If no user, we might still want to log it as "anonymous" or skip
+        // But for this app, we require login for valuation, so session should exist.
+        const userId = session?.user?.id || null;
+
+        await db.insert(auditLogs).values({
+            userId,
+            action,
+            details,
+        });
+    } catch (e) {
+        console.error("Failed to write audit log:", e);
+        // Don't fail the main request just because logging failed
+    }
+}
+
 
 export async function searchCompaniesAction(query: string) {
     try {
@@ -42,6 +64,14 @@ export async function generateAIValuation(companyNumber: string, documentMetadat
 
         // 2. Analyze with Gemini
         const analysis = await analyzeValuationWithGemini(pdfBuffer, companyStatus);
+
+        // 3. Log the successful valuation
+        await logAction("VALUATION_GENERATED", {
+            companyNumber,
+            companyStatus,
+            docUrl,
+            valuation: analysis.valuationEstimate
+        });
 
         return { success: true, data: analysis };
 

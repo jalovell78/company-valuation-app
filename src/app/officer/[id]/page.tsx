@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import BackButton from '@/app/components/BackButton';
@@ -15,6 +15,11 @@ export default function OfficerPage() {
     const [data, setData] = useState<OfficerAppointmentsResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const hasLogged = useRef(false);
+
+    useEffect(() => {
+        hasLogged.current = false;
+    }, [officerId]);
 
     useEffect(() => {
         async function load() {
@@ -22,6 +27,14 @@ export default function OfficerPage() {
             const res = await fetchOfficerAppointments(officerId);
             if (res.success && res.data) {
                 setData(res.data);
+
+                // Log the view (Fire and forget) - verify we haven't logged this one yet
+                if (res.data.name && !hasLogged.current) {
+                    hasLogged.current = true;
+                    import('@/app/actions/audit').then(mod => {
+                        mod.logOfficerAppointView(officerId, res.data.name);
+                    });
+                }
             } else {
                 setError(res.error || "Failed to load officer data");
             }
@@ -69,9 +82,9 @@ export default function OfficerPage() {
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-2 text-gray-900 hover:opacity-80 transition-opacity">
                         <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">
-                            AV
+                            CV
                         </div>
-                        <span className="font-bold text-lg tracking-tight">Antigravity Valuation</span>
+                        <span className="font-bold text-lg tracking-tight">Company Valuation</span>
                     </Link>
                     <Link href="/" className="text-sm font-medium text-gray-500 hover:text-gray-900">
                         New Search
