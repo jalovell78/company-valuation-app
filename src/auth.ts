@@ -33,11 +33,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
     },
     callbacks: {
-        session({ session, user }) {
+        async session({ session, user }) {
             // Pass the role from the database user to the session user
             if (session.user) {
-                session.user.role = user.role || "user"
                 session.user.id = user.id
+
+                // Robust Role Check:
+                // If the adapter doesn't pass 'role' (sometimes happens with custom fields), fetch it.
+                if (user.role) {
+                    session.user.role = user.role
+                } else {
+                    // Fallback query
+                    try {
+                        const { db } = await import("@/db");
+                        const { users } = await import("@/db/schema");
+                        const { eq } = await import("drizzle-orm");
+
+                        // Note: We need to use findFirst or select
+                        // Using lower-level select to be safe with imports
+                        const dbUser = await db.select({ role: users.role }).from(users).where(eq(users.id, user.id)).limit(1);
+
+                        session.user.role = dbUser[0]?.role || "user";
+                    } catch (e) {
+                        console.error("Failed to fetch role fallback", e);
+                        session.user.role = "user";
+                    }
+                }
             }
             return session
         }
