@@ -19,7 +19,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     adapter: DrizzleAdapter(db),
     session: { strategy: "jwt" }, // Force JWT to allow middleware to work smoothly
     events: {
-        async signIn({ user }) {
+        async signIn({ user, account }) {
             // We need to import logAction dynamically or use db directly to avoid circular deps if any
             // Safer to just use db directly here
             const { db } = await import("@/db");
@@ -28,7 +28,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 await db.insert(auditLogs).values({
                     userId: user.id,
                     action: "LOGIN",
-                    details: { method: "google" },
+                    details: { method: account?.provider || "unknown" },
                 });
             }
         }
