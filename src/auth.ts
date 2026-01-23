@@ -1,7 +1,7 @@
 import NextAuth, { type DefaultSession } from "next-auth"
-import Google from "next-auth/providers/google"
 import { DrizzleAdapter } from "@auth/drizzle-adapter"
 import { db } from "@/db"
+import authConfig from "./auth.config"
 
 declare module "next-auth" {
     interface Session {
@@ -15,8 +15,9 @@ declare module "next-auth" {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+    ...authConfig,
     adapter: DrizzleAdapter(db),
-    providers: [Google],
+    session: { strategy: "jwt" }, // Force JWT to allow middleware to work smoothly
     events: {
         async signIn({ user }) {
             // We need to import logAction dynamically or use db directly to avoid circular deps if any
@@ -33,32 +34,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
     },
     callbacks: {
-        async session({ session, user }) {
-            // Pass the role from the database user to the session user
-            if (session.user) {
-                session.user.id = user.id
+        async jwt({ token, user, trigger, session }) {
+            // Initial sign in
+            if (user) {
+                token.id = user.id
 
-                // Robust Role Check:
-                // If the adapter doesn't pass 'role' (sometimes happens with custom fields), fetch it.
-                if (user.role) {
-                    session.user.role = user.role
-                } else {
-                    // Fallback query
-                    try {
-                        const { db } = await import("@/db");
-                        const { users } = await import("@/db/schema");
-                        const { eq } = await import("drizzle-orm");
-
-                        // Note: We need to use findFirst or select
-                        // Using lower-level select to be safe with imports
-                        const dbUser = await db.select({ role: users.role }).from(users).where(eq(users.id, user.id)).limit(1);
-
-                        session.user.role = dbUser[0]?.role || "user";
-                    } catch (e) {
-                        console.error("Failed to fetch role fallback", e);
-                        session.user.role = "user";
-                    }
+                // FORCE fetch role from DB to ensure we get the latest 'admin' status
+                // ignoring potentially stale 'user.role' from the adapter
+                try {
+                    const { db } = await import("@/db");
+                    const { users } = await import("@/db/schema");
+                    const { eq } = await import("drizzle-orm");
+                    const dbUser = await db.select({ role: users.role }).from(users).where(eq(users.id, user.id!)).limit(1);
+                    token.role = dbUser[0]?.role || "user";
+                } catch (e) {
+                    console.error("Auth Role Fetch Error:", e);
+                    token.role = "user";
                 }
+            }
+            return token
+        },
+        async session({ session, token }) {
+            // Pass the role and id from the token to the session user
+            if (session.user && token) {
+                session.user.id = token.id as string
+                session.user.role = (token.role as string) || "user"
             }
             return session
         }

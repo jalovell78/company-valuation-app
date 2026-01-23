@@ -107,9 +107,9 @@ export default async function MemberDashboard() {
                                                     <tr key={log.id}>
                                                         <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                                                             <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${log.action === 'LOGIN' ? 'bg-green-50 text-green-700 ring-green-600/20' :
-                                                                    log.action === 'VALUATION_GENERATED' ? 'bg-indigo-50 text-indigo-700 ring-indigo-600/20' :
-                                                                        log.action === 'VIEW_COMPANY' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
-                                                                            'bg-gray-50 text-gray-700 ring-gray-500/10'
+                                                                log.action === 'VALUATION_GENERATED' ? 'bg-indigo-50 text-indigo-700 ring-indigo-600/20' :
+                                                                    log.action === 'VIEW_COMPANY' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
+                                                                        'bg-gray-50 text-gray-700 ring-gray-500/10'
                                                                 }`}>
                                                                 {log.action === 'VALUATION_GENERATED' ? 'Valuation Report' :
                                                                     log.action === 'VIEW_COMPANY' ? 'Company View' :
@@ -120,7 +120,7 @@ export default async function MemberDashboard() {
                                                         <td className="px-3 py-4 text-sm text-gray-500 truncate max-w-md">
                                                             {detailsContent}
                                                         </td>
-                                                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500" suppressHydrationWarning>
                                                             {log.createdAt ? new Date(log.createdAt).toLocaleString() : ''}
                                                         </td>
                                                     </tr>

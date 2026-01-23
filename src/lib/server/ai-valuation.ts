@@ -126,3 +126,34 @@ export async function analyzeValuationWithGemini(pdfBuffer: Buffer, companyStatu
         throw new Error("AI Analysis returned invalid format");
     }
 }
+
+export async function generateComparisonVerdictAI(nameA: string, nameB: string, metricsA: string[], metricsB: string[]): Promise<string> {
+    if (!GEMINI_API_KEY) throw new Error("Missing Gemini API Key");
+
+    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    const prompt = `
+    You are a financial expert comparing two UK companies: ${nameA} and ${nameB}.
+    
+    ${nameA} Metrics:
+    ${metricsA.join('\n')}
+
+    ${nameB} Metrics:
+    ${metricsB.join('\n')}
+
+    Task:
+    Provide a concise, 3-sentence verdict on which company appears financially stronger and why. 
+    - Focus on Liquidity (Cash/Liabilities) and Asset Base.
+    - Mention if one is significantly larger or older (established).
+    - Use clear, professional language.
+    - Highlight the winner using **bold** text (e.g. "**${nameA}** demonstrates...").
+    - IMPORTANT: Do NOT refer to them as "Company A" or "Company B". Use their actual names.
+    
+    Output strictly the paragraph verdict. No JSON.
+    `;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+}

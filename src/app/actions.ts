@@ -10,8 +10,9 @@ import {
 import { fetchPdfBuffer } from '@/lib/server/pdf-service';
 import { analyzeValuationWithGemini, AIAnalysisResult } from '@/lib/server/ai-valuation';
 import { db } from '@/db';
-import { auditLogs } from '@/db/schema';
+import { auditLogs, valuations } from '@/db/schema';
 import { auth } from '@/auth';
+import { eq } from 'drizzle-orm';
 
 export async function logAction(action: string, details: any) {
     try {
@@ -49,28 +50,72 @@ export async function generateAIValuation(companyNumber: string, documentMetadat
             return { success: false, error: "Authentication required to generate valuation." };
         }
 
-        let docUrl = documentMetadataUrl;
+        // 1. Fetch Filing History to get the "Made Up To" date (Essential for Cache Validation)
+        const history = await getFilingHistory(companyNumber);
 
-        // If no URL provided (e.g. from UI), try to find latest AA
-        if (!docUrl) {
-            const history = await getFilingHistory(companyNumber);
-            const accountFiling = history.items.find((f: any) => f.category === 'accounts' && f.links?.document_metadata);
+        const accountFiling = history.items?.find((f: any) =>
+            f.category === 'accounts' &&
+            f.links?.document_metadata &&
+            (f.type === 'AA' || f.description.toLowerCase().includes('account'))
+        );
 
-            if (!accountFiling) {
-                return { success: false, error: "No accounts filing found with a document link." };
-            }
-            docUrl = accountFiling.links.document_metadata;
+        if (!accountFiling) {
+            return { success: false, error: "No suitable accounts filing found." };
         }
 
+        const cacheKeyDate = accountFiling.date;
+
+        // 2. CHECK CACHE
+        try {
+            const cachedParams = await db
+                .select()
+                .from(valuations)
+                .where(eq(valuations.companyNumber, companyNumber))
+                .limit(1);
+
+            const cachedRecord = cachedParams[0];
+
+            if (cachedRecord && cachedRecord.accountingPeriodEnd === cacheKeyDate) {
+                console.log(`⚡ CACHE HIT for ${companyNumber} (${cacheKeyDate})`);
+                await logAction("VALUATION_VIEW_CACHED", { companyNumber, companyStatus });
+                return { success: true, data: cachedRecord.data as AIAnalysisResult };
+            }
+
+            console.log(`💨 CACHE MISS for ${companyNumber}. Fetching AI...`);
+
+        } catch (dbError) {
+            console.error("Cache Check Failed (ignoring):", dbError);
+        }
+
+        // 3. Fallback to docUrl if not provided
+        const docUrl = documentMetadataUrl || accountFiling.links.document_metadata;
         if (!docUrl) return { success: false, error: "No Document URL available" };
 
-        // 1. Fetch PDF
+        // 4. Run AI Analysis
+        // Note: We might want to pass 'companyStatus' or context if needed, currently reusing logic
         const pdfBuffer = await fetchPdfBuffer(docUrl);
-
-        // 2. Analyze with Gemini
         const analysis = await analyzeValuationWithGemini(pdfBuffer, companyStatus);
 
-        // 3. Log the successful valuation
+        // 5. CACHE WRITE (Upsert)
+        try {
+            await db.insert(valuations).values({
+                companyNumber,
+                data: analysis,
+                accountingPeriodEnd: cacheKeyDate, // Using Filing Date as version key
+            }).onConflictDoUpdate({
+                target: valuations.companyNumber,
+                set: {
+                    data: analysis,
+                    accountingPeriodEnd: cacheKeyDate,
+                    updatedAt: new Date()
+                }
+            });
+            console.log(`💾 CACHE SAVED for ${companyNumber}`);
+        } catch (saveError) {
+            console.error("Failed to save to cache:", saveError);
+        }
+
+        // 6. Log the successful generation (only on fresh generation)
         await logAction("VALUATION_GENERATED", {
             companyNumber,
             companyStatus,
@@ -113,5 +158,16 @@ export async function fetchOfficerAppointments(officerId: string) {
     } catch (error: any) {
         console.error("Fetch Appointments Error:", error);
         return { success: false, error: error.message };
+    }
+}
+
+export async function generateComparisonVerdictAction(nameA: string, nameB: string, metricsA: string[], metricsB: string[]) {
+    try {
+        const { generateComparisonVerdictAI } = await import('@/lib/server/ai-valuation');
+        const verdict = await generateComparisonVerdictAI(nameA, nameB, metricsA, metricsB);
+        return { success: true, verdict };
+    } catch (error: any) {
+        console.error('Comparison Verdict Error:', error);
+        return { success: false, error: 'Failed to generate verdict' };
     }
 }

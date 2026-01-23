@@ -39,3 +39,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Android Build & Secrets
+keystore_credentials.txt
+.gradle/
+mobile-app/build/
+*.pk8
+*.pem
+*.keystore
+*.jks
+mobile-app/app-release*.apk
+mobile-app/app-release*.aab
+
+*.idsig

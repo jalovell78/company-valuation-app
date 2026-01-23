@@ -73,3 +73,11 @@ export const auditLogs = pgTable("audit_logs", {
     details: jsonb("details"), // Store search params, company name, etc.
     createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const valuations = pgTable("valuations", {
+    companyNumber: text("company_number").primaryKey(),
+    data: jsonb("data").notNull(), // Stores the full AIAnalysisResult
+    accountingPeriodEnd: text("accounting_period_end").notNull(), // Used for cache invalidation (Date string YYYY-MM-DD)
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").$onUpdate(() => new Date()),
+});

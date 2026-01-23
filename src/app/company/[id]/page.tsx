@@ -93,13 +93,45 @@ export default async function CompanyPage({ params, searchParams }: PageProps) {
                         </div>
                     </div>
 
+                    {/* Competitor Analysis - Added below header info */}
+                    <div className="mt-6 border-t border-gray-100 pt-6">
+                        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                            <div>
+                                <h3 className="text-base font-semibold text-gray-900">Competitor Analysis</h3>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Compare financial performance against other companies in the {profile.sic_codes ? 'sector' : 'industry'}.
+                                </p>
+                            </div>
+
+                            {isLoggedIn ? (
+                                <Link
+                                    href={`/compare/select?base=${profile.company_number}`}
+                                    className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                                >
+                                    <span>⚔️</span> Compare Companies
+                                </Link>
+                            ) : (
+                                <Link
+                                    href="/login"
+                                    className="w-full md:w-auto bg-gray-900 hover:bg-gray-800 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all flex items-center justify-center gap-2"
+                                >
+                                    <span>🔒</span> Sign in to Compare
+                                </Link>
+                            )}
+                        </div>
+                    </div>
+
                     {/* Travel Map Section - Moved to full width row below the header info */}
-                    <div className="mt-8 border-t border-gray-100 pt-8">
-                        <h3 className="text-base font-semibold leading-6 text-gray-900 mb-4">Travel & Location</h3>
-                        <DynamicMap
-                            destinationAddress={formatAddress(profile.registered_office_address)}
-                            companyName={profile.company_name}
-                        />
+                    <div className="mt-8 border-t border-gray-100 pt-8 flex flex-col md:flex-row gap-8">
+                        <div className="flex-1">
+                            <h3 className="text-base font-semibold leading-6 text-gray-900 mb-4">Travel & Location</h3>
+                            <DynamicMap
+                                destinationAddress={formatAddress(profile.registered_office_address)}
+                                companyName={profile.company_name}
+                            />
+                        </div>
+
+
                     </div>
                 </div>
 

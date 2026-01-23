@@ -35,6 +35,7 @@ export default function UserMenu({ user }: { user: any }) {
             >
                 <div className="hidden flex-col text-right sm:flex">
                     <span className="text-sm font-medium text-gray-900">{user.name}</span>
+                    <span className="text-xs text-gray-500 font-mono">({user.role || 'no-role'})</span>
                 </div>
                 {user.image ? (
                     <img

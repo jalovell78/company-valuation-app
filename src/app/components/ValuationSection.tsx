@@ -381,7 +381,7 @@ export default function ValuationSection({
                             onClick={handleAnalyze}
                             className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
                         >
-                            ✨ Calculate Valuation with AI
+                            ✨ AI Company Valuation
                         </button>
                     )}
 
